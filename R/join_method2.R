@@ -1,11 +1,11 @@
 
 library(dplyr)
 natives_wc<- read.csv("intermediate_data/natives_with_counties_added.csv")
-auinv <- read.csv("data/aus_invasives_elsewhere.csv")
+ausinv <- read.csv("data/aus_invasives_elsewhere.csv")
 
-auinv <- select(auinv, -group)
-auinv <- rename(auinv, 'canonicalName' = species)
+ausinv <- select(ausinv, -group)
+ausinv <- rename(ausinv, 'canonicalName' = species)
 
-join_na_auinv <- left_join(natives_wc, auinv, by = "canonicalName")
+join_na_ausinv <- left_join(natives_wc, ausinv, by = "canonicalName")
 
-write.csv(join_na_auinv,"intermediate_data/natives_with_invasives_method2.csv")
+write.csv(join_na_ausinv,"intermediate_data/natives_with_invasives_method2.csv")
