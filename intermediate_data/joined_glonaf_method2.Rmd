@@ -1,0 +1,28 @@
+```{r}
+library(dplyr)
+library(readr)
+```
+
+```{r}
+glonaf <- read.csv("~/Desktop/Taxon_x_List_GloNAF_vanKleunenetal2018Ecology.csv")
+View(glonaf)
+
+```
+
+```{r}
+method_2="https://raw.githubusercontent.com/traitecoevo/australian_plant_endemism/master/intermediate_data/natives_with_invasives_method2.csv"
+method_2<-read_csv(url(method_2))
+View(method_2)
+```
+```{r}
+glonaf <- rename(glonaf, 'canonicalName' = taxon_orig)
+```
+
+```{r}
+join_glonaf_method2 <-left_join(method_2, glonaf, by = "canonicalName")
+```
+
+```{r}
+write.csv("join_glonaf_method2.csv")
+```
+
