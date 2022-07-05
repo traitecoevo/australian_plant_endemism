@@ -4,7 +4,7 @@ library(readr)
 ```
 
 ```{r}
-glonaf <- read.csv("~/Desktop/Taxon_x_List_GloNAF_vanKleunenetal2018Ecology.csv")
+glonaf <- read.csv("Taxon_x_List_GloNAF_vanKleunenetal2018Ecology.csv")
 View(glonaf)
 
 ```
@@ -23,6 +23,6 @@ join_glonaf_method2 <-left_join(method_2, glonaf, by = "canonicalName")
 ```
 
 ```{r}
-write.csv("join_glonaf_method2.csv")
+write.csv(join_glonaf_method2, "intermediate_data/glonaf_natives_with_invasives_method3.csv")
 ```
 
