@@ -19,14 +19,16 @@ growth_form_subset <- select(growth_form, name_use, value)
 
 #select only first one of each canonical name 
 growth_form_ver2 <- growth_form_subset %>%
-  distinct(canonicalName, .keep_all = TRUE)
+  distinct(name_use, .keep_all = TRUE)
 
 
 growth_form_ver3 <- growth_form_subset %>% 
   group_by(name_use) %>% 
   summarise(value = paste(value, collapse = ",")) #adds all rows 
 
-
+growth_form_ver2 %>%
+  group_by(value) %>%
+  summarize(num_species=n())->counts
 
 install.packages("treemap") #install treemap package 
 library(treemap)
@@ -53,5 +55,8 @@ treemap(df,
         vSize ="value", 
         type = "index")
 
-  
+treemap(counts, 
+        index="value",
+        vSize ="num_species", 
+        type = "index")  
 
