@@ -5,6 +5,7 @@ install.packages("treemap")
 library(austraits) 
 library(dplyr)
 library(treemap)
+library("RColorBrewer")
 
 #austraits growth form data set 
 austraits <- load_austraits(version = "3.0.2", path = "intermediate_data/austraits")
@@ -12,11 +13,12 @@ austraits <- load_austraits(version = "3.0.2", path = "intermediate_data/austrai
 #create new data frame with just the growth form values 
 growth_form <- filter(austraits$traits, trait_name == "plant_growth_form") 
 
+
 #select only necessary info
 growth_form_subset <- select(growth_form, taxon_name, value)
 
 #select only first one of each canonical name 
-growth_form_ver1 <- growth_form_subset %>%
+growth_form <- growth_form_subset %>%
   distinct(taxon_name, .keep_all = TRUE)
 
 
@@ -24,11 +26,30 @@ growth_form_ver1 <- growth_form_subset %>%
 #load endemic dataset 
 country <- read.csv("intermediate_data/country_dataset.csv")
 
+country <- read.csv("intermediate_data/natives_with_endemic_column.csv")
+
+aus_data <- country %>% 
+  mutate(aus_endemic(across(.cols = everything(), if_any(= FLASE, TRUE, FALSE))))
+
+aus_data <- country %>% 
+  group_by(species) %>%
+  mutate(aus_endemic(if_any(contains(TRUE), FALSE)))
+
+aus_data <- country %>%
+  group_by(species) %>%
+  mutate(
+    categrory = case_when(
+      if_any(contains("TRUE"), FALSE)))
+
+aus_data <- country %>% 
+  group_by(species) %>%
+  mutate(aus_endemic = complete.cases(across(everything("TRUE"))))
+
 #rename taxon to match name_use 
-growth_form_ver1 <- rename(growth_form_ver1, 'species' = taxon_name)
+growth_form <- rename(growth_form, 'species' = taxon_name)
 
 #join two datasets 
-join_data <- left_join(country, growth_form_ver1, by = "species")
+join_data <- left_join(country, growth_form, by = "species")
 
 #subset so only endemic 
 endemic_subset <- join_data %>%
@@ -40,52 +61,17 @@ join_data %>%
   group_by(aus_endemic) %>% 
   summarise(aus_endemic=n())
 
-#endemic treemap data 
+#endemic treemap data  
 endemic_counts <- endemic_subset %>% 
   group_by(value) %>% 
   summarise(num_species=n())
 
-#basic treemap 
-treemap(endemic_counts, 
-        index="value",
-        vSize ="num_species", 
-        type = "index")  
-
-
-#playing around with colours 
-#install package 
-install.packages("RColourBrewer")
-library("RColorBrewer")
-
+#all endemic values treemap 
 treemap(endemic_counts, 
         index="value",
         vSize ="num_species", 
         type = "index",
-        palette ="RdYlBu")  
-        
-treemap(endemic_counts, 
-        index="value",
-        vSize ="num_species", 
-        type = "index",
-        palette ="Pastel2",)
-
-treemap(endemic_counts, 
-        index="value",
-        vSize ="num_species", 
-        type = "index",
-        palette ="Set3",)
-
-treemap(endemic_counts, 
-        index="value",
-        vSize ="num_species", 
-        type = "index",
-        palette ="Accent",)
-
-treemap(endemic_counts, 
-        index="value",
-        vSize ="num_species", 
-        type = "index",
-        palette ="BrBG",)
+        palette ="BrBG")
 
 #non-endemic tree map 
 #subset so only non-endemic 
@@ -103,16 +89,71 @@ join_data %>%
   group_by(value) %>% 
   summarise(num_species=n())
 
-#basic treemap no groups
+#all non-endemic values treemap 
 treemap(nonendemic_counts, 
         index="value",
         vSize ="num_species", 
         type = "index",
         palette ="BrBG",
-        title = "Non-endemic Growth Form")
+        )
 
 
 #creating larger groupings of endemic using recode (find out if there is a more succinct way)
+
+#select only necessary 
+#use original joined data 
+#check values for recode 
+unique(join_data$value)
+
+#create larger groupings using recode 
+complete_group <- join_data %>% 
+  group_by(value) %>%
+  mutate (group = recode(value, 
+                         climber_herb = "climber", 
+                         climber_liana = "climber",
+                         climber_palm = "climber", 
+                         "climber_liana climber_vine" = "climber",
+                         climber_scrambler = "climber", 
+                         climber_shrub = "climber", 
+                         climber_twiner = "climber",
+                         climber_vine = "climber", 
+                         climber_vine_herbaceous = "climber",
+                         climber_vine_woody = "climber",
+                         climber_woody = "climber",
+                         "climber_shrub climber_tree" = "climber",
+                         aquatic_herb = "aquatic",
+                         "epiphyte parasite" = "epiphyte", 
+                         fern_tree = "fern",
+                         graminoid_tussock = "graminoid",
+                         "hemi-epiphyte" = "epiphyte", 
+                         "herb shrub" = "herb", 
+                         "herb subshrub" = "herb", 
+                         herb_large = "herb", 
+                         parasite_woody = "parasite", 
+                         prostrate_herb = "prostrate", 
+                         prostrate_shrub = "prostrate", 
+                         rosette_erect = "rosette", 
+                         "shrub subshrub" = "shrub", 
+                         "shrub tree" = "shrub", 
+                         "shrub treelet" = "shrub",
+                         subshrub = "shrub", 
+                         treelet ="tree",
+                         cushion = "herb",
+                         climber_shrub_climber_tree = "climber",
+                         erect_leafy = "herb",
+                         long_basal = "herb",
+                         "rosette" = "herb",
+                         rosette_erect = "herb",
+                         semi_basal = "herb", 
+                         short_basal = "herb",
+                         succulent_short = "succulent",
+                         "epiphyte_herb" = "epiphyte"
+  ))
+
+#check the grouping values 
+unique(complete_group$group)
+
+
 
 #select only necessary info
 endemic_value <- select(endemic_subset, species, value, aus_endemic) #why does it have to have aus_endemic 
@@ -174,6 +215,67 @@ treemap(endemic_group_counts,
         type="index", 
         palette = "BrBG") 
 
+#non-endemic larger group
+#select only necessary info
+nonendemic_value <- select(nonendemic_subset, species, value, aus_endemic) #why does it have to have aus_endemic 
+
+unique(nonendemic_value$value) #check for recode
+# larger groupings using recode 
+nonendemic_group <- nonendemic_value %>% 
+  group_by(value) %>%
+  mutate (group = recode(value, 
+                         climber_herb = "climber", 
+                         climber_liana = "climber",
+                         climber_palm = "climber", 
+                         "climber_liana climber_vine" = "climber",
+                         climber_scrambler = "climber", 
+                         climber_shrub = "climber", 
+                         climber_twiner = "climber",
+                         climber_vine = "climber", 
+                         climber_vine_herbaceous = "climber",
+                         climber_vine_woody = "climber",
+                         climber_woody = "climber",
+                         aquatic_herb = "aquatic",
+                         "epiphyte parasite" = "epiphyte", 
+                         fern_tree = "fern",
+                         graminoid_tussock = "graminoid",
+                         "hemi-epiphyte" = "epiphyte", 
+                         "herb shrub" = "herb", 
+                         "herb subshrub" = "herb", 
+                         herb_large = "herb", 
+                         parasite_woody = "parasite", 
+                         prostrate_herb = "prostrate", 
+                         prostrate_shrub = "prostrate", 
+                         rosette_erect = "rosette", 
+                         "shrub subshrub" = "shrub", 
+                         "shrub tree" = "shrub", 
+                         "shrub treelet" = "shrub",
+                         subshrub = "shrub", 
+                         treelet ="tree",
+                         cushion = "herb",
+                         "climber_shrub climber_tree" = "climber",
+                         erect_leafy = "herb",
+                         long_basal = "herb",
+                         rosette = "herb",
+                         rosette_erect = "herb",
+                         semi_basal = "herb", 
+                         short_basal = "herb",
+                         succulent_short = "succulent"
+  ))
+
+unique(nonendemic_group$group) #check 
+
+#endemic treemap of large groups data 
+nonendemic_group_counts <- nonendemic_group %>% 
+  group_by(group) %>% 
+  summarise(num_species=n())
+
+treemap(nonendemic_group_counts,
+        index= "group",
+        vSize="num_species",
+        type="index", 
+        palette = "BrBG") 
+
 
 #tree map with groups and subgroups 
 #endemic treemap data 
@@ -185,18 +287,18 @@ endemic_subgroup_counts <- endemic_subset %>%
 install.packages("janitor")
 library(janitor)
 
-endemic_counts <- na.omit(endemic_counts)
+endemic_subgroup_counts <- na.omit(endemic_subgroup_counts)
 
 endemic_counts$value <- make_clean_names(endemic_counts$value)  
 
 # larger groupings using recode 
-endemic_subgroup <- endemic_counts %>% 
+endemic_subgroup <- endemic_subgroup_counts %>% 
   group_by(value) %>%
   mutate (group = recode(value, 
                          climber_herb = "climber", 
                          climber_liana = "climber",
                          climber_palm = "climber", 
-                         climber_liana_climber_vine = "climber",
+                         "climber_liana climber_vine" = "climber",
                          climber_scrambler = "climber", 
                          climber_shrub = "climber", 
                          climber_twiner = "climber",
@@ -205,20 +307,20 @@ endemic_subgroup <- endemic_counts %>%
                          climber_vine_woody = "climber",
                          climber_woody = "climber",
                          aquatic_herb = "aquatic",
-                         epiphyte_parasite = "epiphyte", 
+                         "epiphyte parasite" = "epiphyte", 
                          fern_tree = "fern",
                          graminoid_tussock = "graminoid",
-                         hemi_epiphyte = "epiphyte", 
-                         herb_shrub = "herb", 
-                         herb_subshrub = "herb", 
+                         "hemi-epiphyte" = "epiphyte", 
+                         "herb shrub" = "herb", 
+                         "herb subshrub" = "herb", 
                          herb_large = "herb", 
                          parasite_woody = "parasite", 
                          prostrate_herb = "prostrate", 
                          prostrate_shrub = "prostrate", 
                          rosette_erect = "rosette", 
-                         shrub_subshrub = "shrub", 
-                         shrub_tree = "shrub", 
-                         shrub_treelet = "shrub",
+                         "shrub subshrub" = "shrub", 
+                         "shrub tree" = "shrub", 
+                         "shrub treelet" = "shrub",
                          subshrub = "shrub", 
                          treelet ="tree",
                          cushion = "herb",
@@ -228,7 +330,8 @@ endemic_subgroup <- endemic_counts %>%
                          rosette = "herb",
                          rosette_erect = "herb",
                          semi_basal = "herb", 
-                         short_basal = "herb"
+                         short_basal = "herb",
+                         succulent_short = "succulent"
   ))
 #reorder columns 
 endemic_subgroup <- endemic_subgroup %>% select(group, everything())
@@ -280,11 +383,99 @@ library(tidyverse)
 library(highcharter) 
 install.packages("highcharter")
 options(highcharter.theme = hc_theme_smpl(tooltip = list(valueDecimals = 2)))
-hc <- endemic_counts %>%
+hc <- endemic_group_counts %>%
   hchart(
     "treemap", 
-    hcaes(x = value, value = num_species, color = value)
+    hcaes(x = group, value = num_species, color = value)
   )
 hc
 
+endemic_group_counts <- na.omit(endemic_group_counts)
+
+hc <- endemic_group_counts %>%
+  hchart(
+    "treemap", 
+    hcaes(x = group, value = num_species, color = value)
+  )
+hc
+
+
+#other attempt
+
+cols <- endemic_counts %>% 
+  count(value, num_species,  sort = TRUE) %>% 
+  pull(num_species) %>% 
+  unique()
+
+hchart(
+  data_to_hierarchical(endemic_subgroup, c(group, value), num_species),
+  type = "treemap",
+  # levelIsConstant = FALSE,
+  allowDrillToNode = TRUE,
+  levels = lvl_opts,
+  tooltip = list(valueDecimals = FALSE)
+) %>% 
+  hc_chart(
+    style = list(fontFamily = "Arial")
+  ) %>% 
+  hc_title(
+    text = "Endemic Growth Forms",
+    style = list(fontFamily = "Arial")
+  ) %>% 
+  hc_size(height = 700)
+
+lvl_opts <-  list(
+  list(
+    level = 1,
+    borderWidth = 0,
+    borderColor = "transparent",
+    dataLabels = list(
+      enabled = TRUE,
+      align = "left",
+      verticalAlign = "top",
+      style = list(
+        fontSize = "12px", 
+        textOutline = FALSE,
+        color = "white",
+        fontWeight = "normal"
+      )
+    )
+  ),
+  list(
+    level = 2,
+    borderWidth = 0,
+    borderColor = "transparent",
+    colorVariation = list(key = "brightness", to = 0.50),
+    dataLabels = list(enabled = FALSE),
+    style = list(
+      fontSize = "10px",
+      textOutline = FALSE, 
+      color = "white", 
+      fontWeight = "normal"
+    )
+  )
+)
+
+cols <- endemic_subgroup %>% 
+  count(group, value, num_species,  sort = TRUE) %>% 
+  pull(num_species) %>% 
+  unique()
+
+
+hchart(
+  data_to_hierarchical(endemic_subgroup, c(group, value), num_species),
+  type = "treemap",
+  # levelIsConstant = FALSE,
+  allowDrillToNode = TRUE,
+  levels = lvl_opts,
+  tooltip = list(valueDecimals = FALSE)
+) %>% 
+  hc_chart(
+    style = list(fontFamily = "Arial")
+  ) %>% 
+  hc_title(
+    text = "Endemic Growth Forms",
+    style = list(fontFamily = "Arial")
+  ) %>% 
+  hc_size(height = 700)
 
