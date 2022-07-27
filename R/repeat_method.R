@@ -1,10 +1,12 @@
 
-install.packages("readr")
-install.packages("rlang")
-install.packages("dplyr")
+#install.packages("readr")
+#install.packages("rlang")
+#install.packages("dplyr")
 
-
+remotes::install_github("wcornwell/taxonlookup")
+library(taxonlookup)
 library(readr)
+library(tidyverse)
 library(stringr)
 library(dplyr)
 library(ggplot2)
@@ -40,8 +42,9 @@ family_summary %>%
 lt <- lookup_table(countries$species, by_species = TRUE)
 lt <- rownames_to_column(lt, "species")
 
-left_join(countries, lt) -> species_family
+left_join(countries, lt) -> species_with_family
 
 species_with_family %>%
   group_by(group) %>%
   summarize(prop_endemic = sum(aus_endemic)/n(), n=n())
+

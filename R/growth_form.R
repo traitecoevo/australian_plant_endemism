@@ -1,7 +1,7 @@
 
 #package installation 
-remotes::install_github("traitecoevo/austraits", build_vignettes = FALSE)
-install.packages("treemap")
+#remotes::install_github("traitecoevo/austraits", build_vignettes = FALSE)
+#install.packages("treemap")
 library(austraits) 
 library(dplyr)
 library(treemap)
@@ -174,12 +174,6 @@ endemic_subgroup_counts <- complete_group %>%
 group <- left_join(endemic_group_counts, complete_group, by = "group")
 
 #sub grouping treemap 
-#basic
-treemap(group,
-        index=c("group","value"),
-        vSize="num_species",
-        type="index") 
-#fancier
 treemap(group,
         index=c("group","value"),
         vSize="num_species",
@@ -201,11 +195,7 @@ treemap(group,
 ) 
 
 
-
-
-
-#interactive treemap
-
+#interactive endemic treemap
 library(tidyverse)
 library(highcharter) 
 options(highcharter.theme = hc_theme_smpl(tooltip = list(valueDecimals = 2)))
@@ -225,18 +215,24 @@ hc <- endemic_group_counts %>%
   )
 hc
 
-
+#interactive nonendemic treemap
+nonendemic_group_counts <- na.omit(nonendemic_group_counts)
+hc <- nonendemic_group_counts %>%
+  hchart(
+    "treemap", 
+    hcaes(x = group, value = num_species, color = value)
+  )
+hc
 #other attempt
 
-cols <- endemic_counts %>% 
-  count(value, num_species,  sort = TRUE) %>% 
-  pull(num_species) %>% 
-  unique()
+endemic <- group %>%
+  group_by(aus_endemic) %>% 
+  filter(aus_endemic == "TRUE")
 
 hchart(
-  data_to_hierarchical(group, c(group, value), num_species),
+  data_to_hierarchical(endemic, c(group, value), num_species),
   type = "treemap",
-  # levelIsConstant = FALSE,
+  levelIsConstant = FALSE,
   allowDrillToNode = TRUE,
   levels = lvl_opts,
   tooltip = list(valueDecimals = FALSE)
@@ -282,26 +278,26 @@ lvl_opts <-  list(
   )
 )
 
-cols <- group %>% 
-  count(group, value, num_species,  sort = TRUE) %>% 
-  pull(num_species) %>% 
-  unique()
 
+#interactive nonendemic treemap
+
+nonendemic <- group %>%
+  group_by(aus_endemic) %>% 
+  filter(aus_endemic == "FALSE")
 
 hchart(
-  data_to_hierarchical(group, c(group, value), num_species),
+  data_to_hierarchical(nonendemic, c(group, value), num_species),
   type = "treemap",
   # levelIsConstant = FALSE,
   allowDrillToNode = TRUE,
   levels = lvl_opts,
-  tooltip = list(valueDecimals = FALSE)
+  tooltip = list(valueDecimals = TRUE)
 ) %>% 
   hc_chart(
     style = list(fontFamily = "Arial")
   ) %>% 
   hc_title(
-    text = "Endemic Growth Forms",
+    text = "Nonendemic Growth Forms",
     style = list(fontFamily = "Arial")
   ) %>% 
   hc_size(height = 700)
-
