@@ -37,3 +37,6 @@ ne_endangered <- nonendemic_subset %>%
 
 ne_vulnerable<- nonendemic_subset %>% 
   filter(redlistCategory =="Vulnerable")
+
+#added a category variable where both endemic and non-endemic threatened species belong
+category <- left_join(category_endemic, category_nonendemic, by = "redlistCategory")
