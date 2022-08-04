@@ -301,3 +301,6 @@ hchart(
     style = list(fontFamily = "Arial")
   ) %>% 
   hc_size(height = 700)
+
+#stats 
+chisq.test(complete_group$aus_endemic, complete_group$group)
