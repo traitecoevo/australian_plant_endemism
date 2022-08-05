@@ -1,0 +1,49 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r}
+country_dataset="https://raw.githubusercontent.com/traitecoevo/australian_plant_endemism/6e12021f3604d0ad20bc5c44c9c9e08c9cf1a668/intermediate_data/country_dataset.csv"
+country_dataset<-read.csv(url(country_dataset))
+View(country_dataset)
+
+
+#install.packages("rnaturalearth")
+#install.packages("rnaturalearthdata")
+library(ggplot2)
+library(rnaturalearth)
+library(rnaturalearthdata)
+
+
+country_count_basic = "https://raw.githubusercontent.com/traitecoevo/australian_plant_endemism/master/intermediate_data/country_counts.csv"
+country_count_basic<-read_csv(url(country_count_basic))
+View(country_count_basic)
+
+country_count_basic$name<-gsub("_"," ",country_count_basic$Country)
+country_count_basic$name<-str_to_title(country_count_basic$name)
+country_count_basic["26", "name"] <- "Papua New Guinea"
+country_count_basic["26", "Country"] <- "papua_new_guinea"
+country_count <- ne_countries(scale = "medium", returnclass = "sf")
+class(country_count_basic)
+
+cc<-left_join(country_count,country_count_basic)
+View(cc)
+
+ggplot(data = cc) +
+  geom_sf(aes(fill = `sum(presence)`),size=0.1)
+```
+
+```{r}
+ggplot(data = cc) +
+  geom_sf(aes(fill = `sum(presence)`),size=0.1) +
+  scale_fill_viridis_c(option = "plasma")
+```
+
+```{r}
+country_count_basic["26", "name"] <- "Guinea"
+library
+```
+
