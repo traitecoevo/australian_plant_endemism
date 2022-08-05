@@ -17,7 +17,7 @@ endemic_subset <- subset %>%
   group_by(aus_endemic) %>% 
   filter(aus_endemic == "TRUE")
 
- endemic_subset %>% 
+endemic_subset %>% 
   group_by(redlistCategory) %>% 
   summarise(endemic_subset=n())
 
@@ -31,12 +31,34 @@ nonendemic_subset <- subset %>%
   group_by(redlistCategory) %>% 
   summarise(nonendemic_subset=n())
 
-
+#look at specific species 
 ne_endangered <- nonendemic_subset %>% 
              filter(redlistCategory =="Endangered")
 
 ne_vulnerable<- nonendemic_subset %>% 
   filter(redlistCategory =="Vulnerable")
 
-#added a category variable where both endemic and non-endemic threatened species belong
-category <- left_join(category_endemic, category_nonendemic, by = "redlistCategory")
+#plots 
+
+#getting data in correct format 
+subset2 <- subset %>%
+  group_by(aus_endemic, redlistCategory) %>% 
+  summarise(species=n())
+
+
+ggplot(subset2) +
+  geom_bar( aes(x=redlistCategory, y=species), stat="identity", fill="skyblue", alpha=0.7)
+
+
+chisq.test(subset2$aus_endemic, subset2$redlistCategory)
+
+table(subset3$aus_endemic, subset$redlistCategory)
+
+subset3 <- na.omit(subset2)
+
+
+
+  
+
+ 
+
