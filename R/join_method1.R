@@ -1,6 +1,6 @@
 
 library(dplyr)
-gris_us <- read_csv("gris_us_data.csv")
+gris_us <- read_csv("intermediate_data/gris_us_data.csv")
 
 
 us_alien <- select(gris_us, scientificName, isInvasive, establishmentMeans)
