@@ -302,5 +302,5 @@ hchart(
   ) %>% 
   hc_size(height = 700)
 
-#stats 
+#stats attempt
 chisq.test(complete_group$aus_endemic, complete_group$group)
