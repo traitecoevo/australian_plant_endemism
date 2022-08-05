@@ -4,7 +4,7 @@ library(readr)
 ```
 
 ```{r}
-glonaf <- read.csv("Taxon_x_List_GloNAF_vanKleunenetal2018Ecology.csv")
+glonaf <- read.csv("data/Taxon_x_List_GloNAF_vanKleunenetal2018Ecology.csv")
 View(glonaf)
 
 ```
