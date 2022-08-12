@@ -9,10 +9,23 @@ install.packages("sf")
 install.packages("rnaturalearth")
 install.packages("rnaturaldata")
 
+
 library(ggplot2)
 library(rnaturalearth)
 library(rnaturalearthdata)
+library(tidyverse)
 
-country_count = "https://raw.githubusercontent.com/traitecoevo/australian_plant_endemism/master/intermediate_data/country_counts.csv"
-country_count<-read.csv(url(country_count))
-View(country_count)
+country_count_basic = "https://raw.githubusercontent.com/traitecoevo/australian_plant_endemism/master/intermediate_data/country_counts.csv"
+country_count_basic<-read_csv(url(country_count_basic))
+View(country_count_basic)
+country_count_basic$name<-gsub("_"," ",country_count_basic$Country)
+country_count_basic$name<-str_to_title(country_count_basic$name)
+
+
+country_count <- ne_countries(scale = "medium", returnclass = "sf")
+class(country_count)
+
+cc<-left_join(country_count,country_count_basic)
+
+ggplot(data = cc) +
+  geom_sf(aes(fill = `sum(presence)`),size=0.1)
